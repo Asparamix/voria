@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>App Voria</title>
+<title>Cronache di Voria</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -77,7 +77,7 @@
   <header class="codex-header">
     <span class="codex-mark">✦</span>
     <div class="codex-title">
-      <h1>Codex di Voria</h1>
+      <h1>Cronache di Voria</h1>
       <p class="codex-sub">Ciò che il party conosce finora</p>
     </div>
   </header>
@@ -86,13 +86,13 @@
     <aside class="codex-sidebar" id="sidebar">
       <div class="search-wrap">
         <span class="search-icon">⌕</span>
-        <input id="searchInput" type="text" placeholder="Cerca nel Codex…">
+        <input id="searchInput" type="text" placeholder="Cerca nell'Archivio…">
       </div>
       <div class="tabs" id="tabs"></div>
       <div id="entryList" class="entry-list"></div>
     </aside>
     <main class="codex-content" id="content">
-      <div class="empty-state">Seleziona una voce dal Codex per leggerla.</div>
+      <div class="empty-state">Seleziona una voce dall'Archivio per leggerla.</div>
     </main>
   </div>
 </div>
@@ -455,11 +455,11 @@ function renderList(){
 function renderContent(){
   const content = document.getElementById('content');
   const entry = ENTRIES.find(e => e.id === selectedId);
-  if(!entry){ content.innerHTML = '<div class="empty-state">Seleziona una voce dal Codex per leggerla.</div>'; return; }
+  if(!entry){ content.innerHTML = '<div class="empty-state">Seleziona una voce dall\'Archivio per leggerla.</div>'; return; }
   const cat = CATS[entry.categoria];
   const cron = entry.cronologia || [];
   content.innerHTML = `
-    <button class="page-back" id="backBtn">← Torna al Codex</button>
+    <button class="page-back" id="backBtn">← Torna all'Archivio</button>
     <div class="page">
       <div class="page-header">
         <h2 class="page-title">${escapeHtml(entry.nome)}</h2>
