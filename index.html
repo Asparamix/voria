@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codex di Voria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14110E; --bg-panel:#1C1710; --bg-panel-2:#241D14; --border:#3A2F1E;
+    --paper:#EAE0C6; --paper-2:#E1D5B4; --ink:#2A2013;
+    --gold:#C79A4B; --gold-soft:#8F7038;
+    --text-light:#D8CBA9; --text-dim:#9C8F73;
+    --teal:#3F6B5E; --rust:#9A4632; --ochre:#B08A44; --violet:#5C4A8A; --steel:#3D6B8C;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:transparent;color:var(--text-light);font-family:'Inter',sans-serif;}
+  .codex{display:flex;flex-direction:column;height:100vh;min-height:600px;background:var(--bg);border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+  .codex-header{display:flex;align-items:center;gap:12px;padding:18px 22px;background:linear-gradient(180deg,#1A150F,#14110E);border-bottom:1px solid var(--border);}
+  .codex-mark{font-size:22px;color:var(--gold);text-shadow:0 0 12px rgba(199,154,75,0.5);}
+  .codex-title h1{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:25px;margin:0;color:var(--paper);}
+  .codex-sub{margin:2px 0 0;font-size:12px;color:var(--text-dim);}
+
+  .codex-body{flex:1;display:flex;min-height:0;}
+  .codex-sidebar{width:290px;flex-shrink:0;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 14px;min-height:0;}
+  .search-wrap{position:relative;margin-bottom:14px;}
+  #searchInput{width:100%;padding:9px 12px 9px 32px;border-radius:8px;border:1px solid var(--border);background:var(--bg-panel-2);color:var(--text-light);font-size:13px;}
+  #searchInput::placeholder{color:var(--text-dim);}
+  .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;}
+
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .tab{padding:7px 12px;border-radius:16px;background:var(--bg-panel-2);border:1px solid var(--border);color:var(--text-dim);font-size:11.5px;font-weight:600;cursor:pointer;}
+  .tab.active{background:var(--paper);color:var(--ink);border-color:var(--gold);}
+  .tab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+
+  .entry-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+  .entry-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;background:var(--bg-panel-2);border:1px solid transparent;cursor:pointer;}
+  .entry-item:hover{background:#2A2216;}
+  .entry-item.selected{border-color:var(--gold-soft);background:#2E2517;}
+  .entry-icon{width:26px;height:26px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .entry-item .name{font-size:13.5px;font-weight:600;color:var(--paper-2);}
+  .entry-item .cat-label{font-size:10.5px;color:var(--text-dim);text-transform:uppercase;}
+  .empty-list{color:var(--text-dim);font-size:13px;padding:20px 6px;text-align:center;}
+
+  .codex-content{flex:1;min-width:0;overflow-y:auto;padding:30px 40px;background:radial-gradient(ellipse at top left, rgba(199,154,75,0.06), transparent 60%), var(--bg);}
+  .empty-state{color:var(--text-dim);font-family:'Crimson Text',serif;font-size:16px;font-style:italic;margin-top:60px;text-align:center;}
+
+  .page{background:var(--paper);color:var(--ink);border-radius:4px;padding:32px 36px;box-shadow:0 8px 30px rgba(0,0,0,0.4);max-width:700px;border:1px solid #C9BA92;}
+  .page-back{display:none;background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;margin-bottom:14px;padding:0;}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:6px;}
+  .page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;margin:0;color:var(--ink);}
+  .page-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:20px;color:#fff;white-space:nowrap;}
+  .page-tags{margin:10px 0 18px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tag-chip{font-size:11px;padding:3px 9px;border-radius:12px;background:rgba(42,32,19,0.08);color:var(--gold-soft);border:1px solid rgba(143,112,56,0.3);}
+  .page-summary{font-family:'Crimson Text',serif;font-style:italic;font-size:16px;color:#4A3D26;border-left:3px solid var(--gold);padding-left:14px;margin:0 0 20px;}
+  .page-body{font-family:'Crimson Text',serif;font-size:16.5px;line-height:1.65;white-space:pre-wrap;color:var(--ink);}
+  .cronologia{margin-top:20px;padding-top:14px;border-top:1px solid #C9BA92;font-size:12.5px;color:#5A4A2E;}
+  .cronologia-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;color:#8A7642;}
+
+  @media (max-width:760px){
+    .codex-body{position:relative;}
+    .codex-sidebar{width:100%;position:absolute;inset:0;z-index:5;background:var(--bg-panel);}
+    .codex-sidebar.hide-mobile{display:none;}
+    .codex-content{padding:18px 16px;}
+    .page{padding:22px 18px;}
+    .page-back{display:inline-block;}
+    .codex-title h1{font-size:21px;}
+  }
+  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar-thumb{background:#3A2F1E;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div class="codex">
+  <header class="codex-header">
+    <span class="codex-mark">✦</span>
+    <div class="codex-title">
+      <h1>Codex di Voria</h1>
+      <p class="codex-sub">Ciò che il party conosce finora</p>
+    </div>
+  </header>
+
+  <div class="codex-body">
+    <aside class="codex-sidebar" id="sidebar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" type="text" placeholder="Cerca nel Codex…">
+      </div>
+      <div class="tabs" id="tabs"></div>
+      <div id="entryList" class="entry-list"></div>
+    </aside>
+    <main class="codex-content" id="content">
+      <div class="empty-state">Seleziona una voce dal Codex per leggerla.</div>
+    </main>
+  </div>
+</div>
+
+<script>
+const CATS = {
+  png:          { label:'PNG',    color:'#3F6B5E', icon:'👤' },
+  mostro:       { label:'Mostro', color:'#9A4632', icon:'🐺' },
+  luogo:        { label:'Luogo',  color:'#B08A44', icon:'⛰' },
+  storia:       { label:'Storia', color:'#5C4A8A', icon:'📜' },
+  evento_party: { label:'Evento', color:'#3D6B8C', icon:'🎲' }
+};
+
+const ENTRIES = [
+  {
+    "id": "b0bb2ccd-140b-47cb-9c38-b73c2c743e2f",
+    "categoria": "storia",
+    "nome": "Il Grande Cataclisma",
+    "stato_rivelazione": "rivelato",
+    "sommario": "L'evento che pose fine al mondo antico e diede inizio all'era che oggi chiamiamo storia.",
+    "descrizione": "Molto prima dei regni e degli imperi, il cielo tradì la terra: una stella cadde, non come luce ma come rovina. Il suo impatto cancellò un'intera era, spazzando via civiltà di cui oggi restano solo frammenti e leggende.",
+    "tags": [
+      "evento storico",
+      "cataclisma"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "26554958-0ca8-42b0-8beb-86b5b0890584",
+    "categoria": "storia",
+    "nome": "Gli Eloy",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Il popolo dimenticato che dominava Voria prima della caduta del cielo.",
+    "descrizione": "Prima del Cataclisma, un popolo dominava queste terre: gli Eloy. I loro nomi sono ormai sbiaditi, le loro opere spezzate, ma ciò che resta suggerisce una grandezza che sfiora l'incredibile — torri sepolte, corridoi che sfidano la logica, reliquie che nessun artigiano moderno saprebbe replicare. Alcuni considerano le loro rovine sacre, altri le evitano come maledette. E poi ci sono coloro che le cercano, per gloria, per potere, o per qualcosa che non sanno nemmeno nominare.",
+    "tags": [
+      "civiltà scomparsa",
+      "mistero",
+      "rovine"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "51a5fdd0-9671-465b-a6a8-c551bbb0e5c1",
+    "categoria": "storia",
+    "nome": "Impero di Yln",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Il potere che unificò il continente, e il cui crollo è ancora una ferita aperta.",
+    "descrizione": "Dopo secoli di caos, sorse un potere capace di unire ciò che era spezzato: l'Impero di Yln. Sotto la sua guida Voria conobbe ordine — strade, città prospere, commercio fiorente. Ma ogni ordine ha un prezzo, e quello di Yln fu la libertà: le culture locali vennero piegate. Col tempo le crepe divennero fratture, e quando l'impero infine crollò, non rimase nessuno a reclamarne il trono. Solo silenzio e diffidenza.",
+    "tags": [
+      "impero caduto",
+      "storia politica"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "bc8cf3ce-8b38-4621-a0f9-c37b2c2471ea",
+    "categoria": "storia",
+    "nome": "L'Alleanza dei Paesi e il Gran Consiglio",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Il patto fragile tra le nazioni, nato dalla paura di un nuovo impero.",
+    "descrizione": "Dalle rovine dell'impero nacque una nuova visione: non più un sovrano unico, ma un accordo. Ogni stato conserva la propria indipendenza e la propria ambizione, eppure tutti comprendono una verità — se uno solo cercasse di dominare, il continente tornerebbe a bruciare. Al centro di questo equilibrio siede il Gran Consiglio: delegati, nobili e ambasciatori si riuniscono non per governare il mondo, ma per impedire che qualcuno lo faccia.",
+    "tags": [
+      "politica",
+      "gran consiglio",
+      "alleanza"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "935e9bbd-3b47-4440-8b94-228fce7c5f2f",
+    "categoria": "luogo",
+    "nome": "Dominio di Wunderstadt",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Domina i commerci e la politica del continente.",
+    "descrizione": "A occidente e al centro, il Dominio di Wunderstadt domina i commerci e la politica: una città dove ricchezza e intrigo si intrecciano come fili invisibili.",
+    "tags": [
+      "nazione",
+      "oligarchia",
+      "ex capitale imperiale"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "f3bfc9da-4f4b-4f23-9baf-319ebb413872",
+    "categoria": "luogo",
+    "nome": "Fortezza di Varkesh",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Un baluardo inespugnabile a sud del continente.",
+    "descrizione": "A sud, la Fortezza di Varkesh si erge come un baluardo inespugnabile: una terra di disciplina e acciaio che pochi osano sfidare.",
+    "tags": [
+      "nazione",
+      "militare",
+      "isola"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "7bcfc8a7-121f-4cdd-a1c2-40127aa673c1",
+    "categoria": "luogo",
+    "nome": "Reame Silvano",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Gli elfi delle foreste orientali, custodi di antiche armonie.",
+    "descrizione": "Nelle foreste orientali, il Reame Silvano custodisce antiche armonie: gli elfi vegliano su equilibri che gli altri popoli a malapena comprendono.",
+    "tags": [
+      "nazione",
+      "elfi silvani",
+      "foreste"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "bfe00ae7-ce85-4b4f-ae6e-f03167a7c385",
+    "categoria": "luogo",
+    "nome": "Repubblica di Meccanor",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Ingegno e invenzioni tra le montagne.",
+    "descrizione": "Tra le montagne, la Repubblica di Meccanor plasma il futuro con ingegno e invenzioni.",
+    "tags": [
+      "nazione",
+      "gnomi",
+      "tecnologia"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "a1acc169-cea0-4de0-8290-5b83bd781085",
+    "categoria": "luogo",
+    "nome": "Corona di Thar'Khaz",
+    "stato_rivelazione": "rivelato",
+    "sommario": "I nani che traggono ricchezza dalle profondità della terra.",
+    "descrizione": "Più a nord, la Corona di Thar'Khaz trae potere dalle profondità della terra, dove i nani scolpiscono ricchezza nella roccia.",
+    "tags": [
+      "nazione",
+      "nani",
+      "minerario"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "2eec864c-a286-45b2-962d-668bc1151000",
+    "categoria": "luogo",
+    "nome": "Repubblica Popolare dell'Ovest",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Il granaio del continente.",
+    "descrizione": "A ovest, la Repubblica dell'Ovest nutre l'intero continente: i suoi campi sono vasti quanto la sua importanza.",
+    "tags": [
+      "nazione",
+      "agricoltura",
+      "stato satellite"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "55879c9f-f053-42eb-9cd2-e60105df9863",
+    "categoria": "luogo",
+    "nome": "Gargantua",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Il vortice nato dove la stella caduta colpì il mare.",
+    "descrizione": "Dove colpì la stella caduta, il mare non trovò più pace: lì nacque Gargantua, un vortice immenso e insondabile le cui acque sembrano divorare il mondo stesso. Navi intere sono scomparse tra le sue spire, e c'è chi giura di aver visto luci muoversi nelle profondità.",
+    "tags": [
+      "fenomeno",
+      "vortice",
+      "zona di interdizione"
+    ],
+    "cronologia": [
+      {
+        "sessione": "pre-campagna",
+        "data": "",
+        "nota": "Conoscenza fornita ai giocatori nel Documento Pubblico pre-campagna."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "3ad31d73-be96-4bde-b269-7af9a9e85ef7",
+    "categoria": "png",
+    "nome": "L'Illusionista",
+    "stato_rivelazione": "parziale",
+    "sommario": "Un enigmatico individuo incontrato dal party.",
+    "descrizione": "Un misterioso figuro incontrato dal gruppo, che ha lasciato loro la Moneta della Fenice. Le sue reali intenzioni restano sconosciute.",
+    "tags": [
+      "mistero",
+      "sessione 1"
+    ],
+    "cronologia": [
+      {
+        "sessione": 1,
+        "data": "2026-05-23",
+        "nota": "Primo incontro con il party; ha lasciato la Moneta della Fenice."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "b140c53b-6b02-4335-967f-877cd254d351",
+    "categoria": "evento_party",
+    "nome": "Il Party",
+    "stato_rivelazione": "rivelato",
+    "sommario": "I membri del gruppo e i loro personaggi.",
+    "descrizione": "Teresa interpreta Dexhalast, dragonide barbaro.\nCarlo interpreta Bittinpoppin.\nIrene interpreta un personaggio non ancora specificato nelle note.\nDeri interpreta Ginma, nano.",
+    "tags": [
+      "party"
+    ],
+    "cronologia": [
+      {
+        "sessione": 0,
+        "data": "",
+        "nota": "Creazione dei personaggi."
+      }
+    ],
+    "immagine": ""
+  },
+  {
+    "id": "30fea193-4175-4062-8dc2-b5f4fa2d8826",
+    "categoria": "evento_party",
+    "nome": "Sessione 1 — 23 maggio 2026",
+    "stato_rivelazione": "rivelato",
+    "sommario": "Il gruppo ha incontrato per la prima volta un misterioso Illusionista.",
+    "descrizione": "Durante questa sessione il party ha incontrato per la prima volta l'Illusionista, che ha lasciato loro la Moneta della Fenice. La sessione si è conclusa con il tentativo del gruppo di catturare, tramite una provetta, la luce al centro di un'anomalia.",
+    "tags": [
+      "sessione 1"
+    ],
+    "cronologia": [
+      {
+        "sessione": 1,
+        "data": "2026-05-23",
+        "nota": "Prima sessione della campagna."
+      }
+    ],
+    "immagine": ""
+  }
+];
+
+let activeCategory = 'tutti';
+let searchTerm = '';
+let selectedId = null;
+
+function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function buildTabs(){
+  const present = [...new Set(ENTRIES.map(e=>e.categoria))];
+  const tabs = document.getElementById('tabs');
+  let html = `<button class="tab active" data-cat="tutti">Tutti</button>`;
+  present.forEach(cat=>{
+    const c = CATS[cat];
+    html += `<button class="tab" data-cat="${cat}"><span class="dot" style="background:${c.color}"></span>${c.label}</button>`;
+  });
+  tabs.innerHTML = html;
+  tabs.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      tabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active'); activeCategory = tab.dataset.cat; renderList();
+    });
+  });
+}
+
+function filteredEntries(){
+  return ENTRIES
+    .filter(e => activeCategory === 'tutti' || e.categoria === activeCategory)
+    .filter(e => {
+      if(!searchTerm) return true;
+      const hay = (e.nome + ' ' + (e.tags||[]).join(' ') + ' ' + (e.sommario||'')).toLowerCase();
+      return hay.includes(searchTerm.toLowerCase());
+    })
+    .sort((a,b) => a.nome.localeCompare(b.nome, 'it'));
+}
+
+function renderList(){
+  const list = document.getElementById('entryList');
+  const items = filteredEntries();
+  if(items.length === 0){
+    list.innerHTML = '<div class="empty-list">Nessuna voce trovata.</div>';
+    return;
+  }
+  list.innerHTML = items.map(e => {
+    const cat = CATS[e.categoria];
+    return `<div class="entry-item ${e.id===selectedId?'selected':''}" data-id="${e.id}">
+      <div class="entry-icon" style="background:${cat.color}33;">${cat.icon}</div>
+      <div><div class="name">${escapeHtml(e.nome)}</div><div class="cat-label">${cat.label}</div></div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.entry-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      selectedId = el.dataset.id; renderList(); renderContent();
+      if(window.innerWidth <= 760) document.getElementById('sidebar').classList.add('hide-mobile');
+    });
+  });
+}
+
+function renderContent(){
+  const content = document.getElementById('content');
+  const entry = ENTRIES.find(e => e.id === selectedId);
+  if(!entry){ content.innerHTML = '<div class="empty-state">Seleziona una voce dal Codex per leggerla.</div>'; return; }
+  const cat = CATS[entry.categoria];
+  const cron = entry.cronologia || [];
+  content.innerHTML = `
+    <button class="page-back" id="backBtn">← Torna al Codex</button>
+    <div class="page">
+      <div class="page-header">
+        <h2 class="page-title">${escapeHtml(entry.nome)}</h2>
+        <span class="page-badge" style="background:${cat.color};">${cat.icon} ${cat.label}</span>
+      </div>
+      <div class="page-tags">${(entry.tags||[]).map(t=>`<span class="tag-chip">${escapeHtml(t)}</span>`).join('')}</div>
+      ${entry.sommario ? `<p class="page-summary">${escapeHtml(entry.sommario)}</p>` : ''}
+      <div class="page-body">${escapeHtml(entry.descrizione)}</div>
+      ${cron.length ? `<div class="cronologia"><div class="cronologia-label">Cronologia</div>${cron.map(c=>`<div>Sessione ${escapeHtml(String(c.sessione))}${c.data?` (${escapeHtml(c.data)})`:''}: ${escapeHtml(c.nota)}</div>`).join('')}</div>` : ''}
+    </div>
+  `;
+  const back = document.getElementById('backBtn');
+  if(back) back.addEventListener('click', ()=>{ document.getElementById('sidebar').classList.remove('hide-mobile'); });
+}
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{ searchTerm = e.target.value; renderList(); });
+
+buildTabs();
+renderList();
+</script>
+</body>
+</html>
